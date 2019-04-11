@@ -1,6 +1,7 @@
 package applock.mindorks.com.applock.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -45,7 +46,9 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
             applicationName = (TextView) v.findViewById(R.id.applicationName);
             cardView = (CardView) v.findViewById(R.id.card_view);
             icon = (ImageView) v.findViewById(R.id.icon);
-            switchView = (Switch) v.findViewById(R.id.switchView);
+            if(requiredAppsType != AppLockConstants.AVAILABLE) {
+                switchView = (Switch) v.findViewById(R.id.switchView);
+            }
         }
     }
 
@@ -99,10 +102,17 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
     public ApplicationListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                                 int viewType) {
         // create a new view
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
-        // set the view's size, margins, paddings and layout parameters
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        if(this.requiredAppsType == AppLockConstants.AVAILABLE) {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.app_item, parent, false);
+            // set the view's size, margins, paddings and layout parameters
+            ViewHolder vh = new ViewHolder(v);
+            return vh;
+        } else {
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
+            // set the view's size, margins, paddings and layout parameters
+            ViewHolder vh = new ViewHolder(v);
+            return vh;
+        }
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -114,30 +124,39 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
         holder.applicationName.setText(appInfo.getName());
         holder.icon.setBackgroundDrawable(appInfo.getIcon());
 
-        holder.switchView.setOnCheckedChangeListener(null);
-        holder.cardView.setOnClickListener(null);
-        if (checkLockedItem(appInfo.getPackageName())) {
-            holder.switchView.setChecked(true);
-        } else {
-            holder.switchView.setChecked(false);
+        if(holder.switchView != null) {
+            holder.switchView.setOnCheckedChangeListener(null);
         }
-
-        holder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Lock Clicked", "lock_clicked", appInfo.getPackageName());
-                    sharedPreference.addLocked(context, appInfo.getPackageName());
-                } else {
-                    AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Unlock Clicked", "unlock_clicked", appInfo.getPackageName());
-                    sharedPreference.removeLocked(context, appInfo.getPackageName());
-                }
+        holder.cardView.setOnClickListener(null);
+        if(holder.switchView != null) {
+            if (checkLockedItem(appInfo.getPackageName())) {
+                holder.switchView.setChecked(true);
+            } else {
+                holder.switchView.setChecked(false);
             }
-        });
+
+            holder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Lock Clicked", "lock_clicked", appInfo.getPackageName());
+                        sharedPreference.addLocked(context, appInfo.getPackageName());
+                    } else {
+                        AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Unlock Clicked", "unlock_clicked", appInfo.getPackageName());
+                        sharedPreference.removeLocked(context, appInfo.getPackageName());
+                    }
+                }
+            });
+        }
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                holder.switchView.performClick();
+                if(requiredAppsType != AppLockConstants.AVAILABLE) {
+                    holder.switchView.performClick();
+                } else {
+                    Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(appInfo.getPackageName());
+                    context.startActivity(launchIntent);
+                }
             }
         });
     }

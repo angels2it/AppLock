@@ -22,5 +22,6 @@ public class AppLockConstants {
     public static final String PASSWORD_RECOVER_SET_SCREEN = "password_recover_set_screen";
     public static final String PASSWORD_RECOVERY_SCREEN = "password_recovery_screen";
     public static final String NEW_APP_INSTALL_DIALOG_BOX = "new_app_install_dialog_box";
+    public static  final String AVAILABLE = "available_apps";
 
 }

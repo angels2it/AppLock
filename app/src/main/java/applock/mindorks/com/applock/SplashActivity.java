@@ -13,11 +13,14 @@ import android.view.Gravity;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.analytics.GoogleAnalytics;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
+import applock.mindorks.com.applock.Api.ApiInstance;
+import applock.mindorks.com.applock.Utils.AppLockLogEvents;
 import applock.mindorks.com.applock.services.AlarmReceiver;
 import applock.mindorks.com.applock.services.AppCheckServices;
 
@@ -55,6 +58,8 @@ public class SplashActivity extends AppCompatActivity {
 
         /***************************************************************************************/
 
+        ApiInstance.Init();
+
         LinearLayout linearLayout = new LinearLayout(this);
         linearLayout.setBackgroundColor(getResources().getColor(R.color.primary_dark));
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
@@ -80,8 +85,14 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (isPasswordSet) {
-                    Intent i = new Intent(SplashActivity.this, PasswordActivity.class);
+                    // testing - skip password
+//                    Intent i = new Intent(SplashActivity.this, PasswordActivity.class);
+//                    startActivity(i);
+                    Toast.makeText(getApplicationContext(), "Success : Password Match", Toast.LENGTH_SHORT).show();
+                    Intent i = new Intent(SplashActivity.this, LoadingActivity.class);
                     startActivity(i);
+                    finish();
+                    AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
                 } else {
                     Intent i = new Intent(SplashActivity.this, PasswordSetActivity.class);
                     startActivity(i);

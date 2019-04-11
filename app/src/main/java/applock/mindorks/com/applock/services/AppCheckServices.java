@@ -26,6 +26,8 @@ import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 import com.takwolf.android.lock9.Lock9View;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.Timer;
@@ -55,6 +57,7 @@ public class AppCheckServices extends Service {
     public static String previousApp = "";
     SharedPreference sharedPreference;
     List<String> pakageName;
+    static List<String> excludeApp = Arrays.asList("android");
 
     @Override
     public void onCreate() {
@@ -75,12 +78,22 @@ public class AppCheckServices extends Service {
         imageView = new ImageView(this);
         imageView.setVisibility(View.GONE);
 
-        final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                PixelFormat.TRANSLUCENT);
+        final WindowManager.LayoutParams params;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT);
+        } else {
+            params = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_PHONE,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT);
+        }
 
         params.gravity = Gravity.TOP | Gravity.CENTER;
         params.x = ((getApplicationContext().getResources().getDisplayMetrics().widthPixels) / 2);
@@ -119,10 +132,12 @@ public class AppCheckServices extends Service {
     };
 
     void showUnlockDialog() {
+
         showDialog();
     }
 
     void hideUnlockDialog() {
+        Log.d(TAG,"Hide dialog");
         previousApp = "";
         try {
             if (dialog != null) {
@@ -136,6 +151,7 @@ public class AppCheckServices extends Service {
     }
 
     void showDialog() {
+        Log.d(TAG,"Show dialog");
         if (context == null)
             context = getApplicationContext();
         LayoutInflater layoutInflater = LayoutInflater.from(context);
@@ -170,7 +186,11 @@ public class AppCheckServices extends Service {
         dialog.setCanceledOnTouchOutside(false);
         dialog.setCancelable(false);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_PHONE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+        } else {
+            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_PHONE);
+        }
         dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         dialog.setContentView(promptsView);
         dialog.getWindow().setGravity(Gravity.CENTER);
@@ -232,22 +252,21 @@ public class AppCheckServices extends Service {
             if (stats != null) {
                 SortedMap<Long, UsageStats> runningTask = new TreeMap<Long, UsageStats>();
                 for (UsageStats usageStats : stats) {
-                    runningTask.put(usageStats.getLastTimeUsed(), usageStats);
+                    if(!excludeApp.contains(usageStats.getPackageName())) {
+                        runningTask.put(usageStats.getLastTimeUsed(), usageStats);
+                    }
                 }
                 if (runningTask.isEmpty()) {
                     Log.d(TAG,"isEmpty Yes");
                     mpackageName = "";
                 }else {
                     mpackageName = runningTask.get(runningTask.lastKey()).getPackageName();
-                    Log.d(TAG,"isEmpty No : "+mpackageName);
-                }
-            }
+                    Log.d(TAG,"isEmpty No : " + mpackageName);
 
-
-            for (int i = 0; pakageName != null && i < pakageName.size(); i++) {
-                if (mpackageName.equals(pakageName.get(i))) {
-                    currentApp = pakageName.get(i);
-                    return true;
+                    if(pakageName.contains(mpackageName)) {
+                        currentApp = mpackageName;
+                        return  true;
+                    }
                 }
             }
         }

@@ -41,6 +41,8 @@ import java.util.List;
 import applock.mindorks.com.applock.Custom.FlatButton;
 import applock.mindorks.com.applock.Data.AppInfo;
 import applock.mindorks.com.applock.Fragments.AllAppFragment;
+import applock.mindorks.com.applock.Fragments.AvailableAppFragment;
+import applock.mindorks.com.applock.Fragments.ImeiFragment;
 import applock.mindorks.com.applock.Fragments.PasswordFragment;
 import applock.mindorks.com.applock.Utils.AppLockLogEvents;
 import applock.mindorks.com.applock.Utils.MyUtils;
@@ -58,6 +60,17 @@ public class MainActivity extends AppCompatActivity {
     long numOfTimesAppOpened = 0;
     boolean isRated = false;
 
+    private int REQUEST_CODE = 5463 & 0xffffff00;
+
+
+    public void checkDrawOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(context)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
+                startActivityForResult(intent, REQUEST_CODE);
+            }
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
         isRated = sharedPreferences.getBoolean(AppLockConstants.IS_RATED, false);
         editor.putLong(AppLockConstants.NUM_OF_TIMES_APP_OPENED, numOfTimesAppOpened);
         editor.commit();
+
+        checkDrawOverlayPermission();
 
         //Google Analytics
         Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
@@ -95,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
                         new PrimaryDrawerItem().withName("Locked Applications").withIcon(FontAwesome.Icon.faw_lock),
                         new PrimaryDrawerItem().withName("Unlocked Applications").withIcon(FontAwesome.Icon.faw_unlock),
                         new PrimaryDrawerItem().withName("Change Password").withIcon(FontAwesome.Icon.faw_exchange),
-                        new PrimaryDrawerItem().withName("Allow Access").withIcon(FontAwesome.Icon.faw_share)
+                        new PrimaryDrawerItem().withName("Allow Access").withIcon(FontAwesome.Icon.faw_share),
+                        new PrimaryDrawerItem().withName("Add IMEI").withIcon(FontAwesome.Icon.faw_share)
                 ) // add the items we want to use with our Drawer
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -103,10 +119,10 @@ public class MainActivity extends AppCompatActivity {
                         if (drawerItem != null && drawerItem instanceof Nameable) {
 
                             if (position == 0) {
-                                getSupportActionBar().setTitle("All Applications");
-                                Fragment f = AllAppFragment.newInstance(AppLockConstants.ALL_APPS);
+                                getSupportActionBar().setTitle("Available Apps");
+                                Fragment f = AllAppFragment.newInstance(AppLockConstants.AVAILABLE);
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
-                                AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show All Applications Clicked", "show_all_applications_clicked", "");
+                                AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show Unlocked Applications Clicked", "show_unlocked_applications_clicked", "");
                             }
 
                             if (position == 1) {
@@ -138,6 +154,12 @@ public class MainActivity extends AppCompatActivity {
                                 result.setSelection(0);
                             }
 
+                            if (position == 5) {
+                                getSupportActionBar().setTitle("Set IMEI");
+                                Fragment f = ImeiFragment.newInstance();
+                                fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                                AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Set IMEI Clicked", "set_imei_clicked", "");
+                            }
                         }
                     }
                 })
@@ -178,8 +200,8 @@ public class MainActivity extends AppCompatActivity {
         if (result != null && result.isDrawerOpen()) {
             result.closeDrawer();
         } else {
-            if (getCurrentFragment() instanceof AllAppFragment) {
-                super.onBackPressed();
+            if (getCurrentFragment() instanceof AvailableAppFragment) {
+                // do nothing
             } else {
                 fragmentManager.popBackStack();
                 getSupportActionBar().setTitle("AllAppFragment");
