@@ -19,6 +19,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -58,6 +60,7 @@ public class AppCheckServices extends Service {
     SharedPreference sharedPreference;
     List<String> pakageName;
     static List<String> excludeApp = Arrays.asList("android");
+    boolean isShow = false;
 
     @Override
     public void onCreate() {
@@ -108,11 +111,14 @@ public class AppCheckServices extends Service {
             if (sharedPreference != null) {
                 pakageName = sharedPreference.getLocked(context);
             }
+            if(isShow) {
+                return;
+            }
             if (isConcernedAppIsInForeground()) {
                 if (imageView != null) {
                     imageView.post(new Runnable() {
                         public void run() {
-                            if (!currentApp.matches(previousApp)) {
+                            if (!currentApp.matches(context.getPackageName()) && !currentApp.matches(previousApp)) {
                                 showUnlockDialog();
                                 previousApp = currentApp;
                             }
@@ -132,11 +138,12 @@ public class AppCheckServices extends Service {
     };
 
     void showUnlockDialog() {
-
+        isShow = true;
         showDialog();
     }
 
     void hideUnlockDialog() {
+        isShow = false;
         Log.d(TAG,"Hide dialog");
         previousApp = "";
         try {
@@ -156,29 +163,18 @@ public class AppCheckServices extends Service {
             context = getApplicationContext();
         LayoutInflater layoutInflater = LayoutInflater.from(context);
         View promptsView = layoutInflater.inflate(R.layout.popup_unlock, null);
-        Lock9View lock9View = (Lock9View) promptsView.findViewById(R.id.lock_9_view);
-        FlatButton forgetPassword = (FlatButton) promptsView.findViewById(R.id.forgetPassword);
-        lock9View.setCallBack(new Lock9View.CallBack() {
+        final EditText inputPassword = (EditText) promptsView.findViewById(R.id.input_password);
+        Button confirmPassword = (Button) promptsView.findViewById(R.id.confirm_password);
+        confirmPassword.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onFinish(String password) {
-                if (password.matches(sharedPreference.getPassword(context))) {
+            public void onClick(View v) {
+                if (inputPassword.getText().toString().matches(sharedPreference.getPassword(context))) {
                     dialog.dismiss();
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
                 } else {
                     Toast.makeText(getApplicationContext(), "Wrong Pattern Try Again", Toast.LENGTH_SHORT).show();
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Wrong Password", "wrong_password", "");
                 }
-            }
-        });
-
-        forgetPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent i = new Intent(AppCheckServices.this, PasswordRecoveryActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(i);
-                dialog.dismiss();
-                AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Forget Password", "forget_password", "");
             }
         });
 
@@ -206,6 +202,7 @@ public class AppCheckServices extends Service {
                     startMain.addCategory(Intent.CATEGORY_HOME);
                     startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(startMain);
+                    hideUnlockDialog();
                 }
                 return true;
             }

@@ -72,7 +72,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
         List<AppInfo> lockedFilteredAppList = new ArrayList<AppInfo>();
         List<AppInfo> unlockedFilteredAppList = new ArrayList<AppInfo>();
         boolean flag = true;
-        if (requiredAppsType.matches(AppLockConstants.LOCKED) || requiredAppsType.matches(AppLockConstants.UNLOCKED)) {
+        if (requiredAppsType.matches(AppLockConstants.LOCKED) || requiredAppsType.matches(AppLockConstants.AVAILABLE) || requiredAppsType.matches(AppLockConstants.UNLOCKED)) {
             for (int i = 0; i < installedApps.size(); i++) {
                 flag = true;
                 if (sharedPreference.getLocked(context) != null) {
@@ -90,7 +90,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
             if (requiredAppsType.matches(AppLockConstants.LOCKED)) {
                 installedApps.clear();
                 installedApps.addAll(lockedFilteredAppList);
-            } else if (requiredAppsType.matches(AppLockConstants.UNLOCKED)) {
+            } else if (requiredAppsType.matches(AppLockConstants.UNLOCKED) || requiredAppsType.matches(AppLockConstants.AVAILABLE)) {
                 installedApps.clear();
                 installedApps.addAll(unlockedFilteredAppList);
             }
@@ -106,11 +106,13 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.app_item, parent, false);
             // set the view's size, margins, paddings and layout parameters
             ViewHolder vh = new ViewHolder(v);
+            vh.switchView = null;
             return vh;
         } else {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_list, parent, false);
             // set the view's size, margins, paddings and layout parameters
             ViewHolder vh = new ViewHolder(v);
+            vh.switchView = (Switch) v.findViewById(R.id.switchView);
             return vh;
         }
     }

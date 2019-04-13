@@ -21,6 +21,7 @@ import com.google.android.gms.analytics.Tracker;
 
 import applock.mindorks.com.applock.Api.ApiInstance;
 import applock.mindorks.com.applock.Utils.AppLockLogEvents;
+import applock.mindorks.com.applock.Utils.MyUtils;
 import applock.mindorks.com.applock.services.AlarmReceiver;
 import applock.mindorks.com.applock.services.AppCheckServices;
 
@@ -41,7 +42,10 @@ public class SplashActivity extends AppCompatActivity {
         context = getApplicationContext();
 
         /****************************** too much important don't miss it *****************************/
-        startService(new Intent(SplashActivity.this, AppCheckServices.class));
+        if(MyUtils.isDrawOverrideGranted(this)) {
+            startService(new Intent(SplashActivity.this, AppCheckServices.class));
+        }
+
 
         try {
             Intent alarmIntent = new Intent(context, AlarmReceiver.class);
@@ -84,19 +88,8 @@ public class SplashActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (isPasswordSet) {
-                    // testing - skip password
-//                    Intent i = new Intent(SplashActivity.this, PasswordActivity.class);
-//                    startActivity(i);
-                    Toast.makeText(getApplicationContext(), "Success : Password Match", Toast.LENGTH_SHORT).show();
-                    Intent i = new Intent(SplashActivity.this, LoadingActivity.class);
-                    startActivity(i);
-                    finish();
-                    AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
-                } else {
-                    Intent i = new Intent(SplashActivity.this, PasswordSetActivity.class);
-                    startActivity(i);
-                }
+                Intent i = new Intent(SplashActivity.this, LoadingActivity.class);
+                startActivity(i);
                 finish();
             }
         }, SPLASH_TIME_OUT);

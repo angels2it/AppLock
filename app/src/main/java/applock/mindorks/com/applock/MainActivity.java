@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -36,6 +37,7 @@ import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.mikepenz.materialdrawer.util.KeyboardUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import applock.mindorks.com.applock.Custom.FlatButton;
@@ -46,6 +48,7 @@ import applock.mindorks.com.applock.Fragments.ImeiFragment;
 import applock.mindorks.com.applock.Fragments.PasswordFragment;
 import applock.mindorks.com.applock.Utils.AppLockLogEvents;
 import applock.mindorks.com.applock.Utils.MyUtils;
+import applock.mindorks.com.applock.services.AppCheckServices;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -60,17 +63,6 @@ public class MainActivity extends AppCompatActivity {
     long numOfTimesAppOpened = 0;
     boolean isRated = false;
 
-    private int REQUEST_CODE = 5463 & 0xffffff00;
-
-
-    public void checkDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(context)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.getPackageName()));
-                startActivityForResult(intent, REQUEST_CODE);
-            }
-        }
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,8 +75,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putLong(AppLockConstants.NUM_OF_TIMES_APP_OPENED, numOfTimesAppOpened);
         editor.commit();
 
-        checkDrawOverlayPermission();
-
+        MyUtils.checkAppPermissions(this);
         //Google Analytics
         Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
         t.setScreenName(AppLockConstants.MAIN_SCREEN);
@@ -109,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
                         new PrimaryDrawerItem().withName("All Applications").withIcon(FontAwesome.Icon.faw_home),
                         new PrimaryDrawerItem().withName("Locked Applications").withIcon(FontAwesome.Icon.faw_lock),
                         new PrimaryDrawerItem().withName("Unlocked Applications").withIcon(FontAwesome.Icon.faw_unlock),
-                        new PrimaryDrawerItem().withName("Change Password").withIcon(FontAwesome.Icon.faw_exchange),
                         new PrimaryDrawerItem().withName("Allow Access").withIcon(FontAwesome.Icon.faw_share),
                         new PrimaryDrawerItem().withName("Add IMEI").withIcon(FontAwesome.Icon.faw_share)
                 ) // add the items we want to use with our Drawer
@@ -140,13 +130,6 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                             if (position == 3) {
-                                getSupportActionBar().setTitle("Change Password");
-                                Fragment f = PasswordFragment.newInstance();
-                                fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
-                                AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Password Changed Clicked", "password_changed_clicked", "");
-                            }
-
-                            if (position == 4) {
                                 final Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
                                 startActivity(intent);
                                 Toast.makeText(getApplicationContext(), "If you have not allowed , allow App Lock so that it can work properly", Toast.LENGTH_LONG).show();
@@ -154,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                                 result.setSelection(0);
                             }
 
-                            if (position == 5) {
+                            if (position == 4) {
                                 getSupportActionBar().setTitle("Set IMEI");
                                 Fragment f = ImeiFragment.newInstance();
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
@@ -254,7 +237,6 @@ public class MainActivity extends AppCompatActivity {
 //        return super.onOptionsItemSelected(item);
 //    }
 
-
     /**
      * get the list of all installed applications in the device
      *
@@ -263,25 +245,32 @@ public class MainActivity extends AppCompatActivity {
     public static List<AppInfo> getListOfInstalledApp(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<AppInfo> installedApps = new ArrayList();
-        List<PackageInfo> apps = packageManager.getInstalledPackages(PackageManager.SIGNATURE_MATCH);
-        if (apps != null && !apps.isEmpty()) {
+//        List<PackageInfo> apps = packageManager.getInstalledPackages(PackageManager.SIGNATURE_MATCH);
+//
 
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+        List<ResolveInfo> apps = packageManager.queryIntentActivities(intent, 0);
+
+
+        if (apps != null && !apps.isEmpty()) {
             for (int i = 0; i < apps.size(); i++) {
-                PackageInfo p = apps.get(i);
+                ResolveInfo p = apps.get(i);
                 ApplicationInfo appInfo = null;
                 try {
-                    appInfo = packageManager.getApplicationInfo(p.packageName, 0);
-                    AppInfo app = new AppInfo();
-                    app.setName(p.applicationInfo.loadLabel(packageManager).toString());
-                    app.setPackageName(p.packageName);
-                    app.setVersionName(p.versionName);
-                    app.setVersionCode(p.versionCode);
-                    app.setIcon(p.applicationInfo.loadIcon(packageManager));
+                    appInfo = packageManager.getApplicationInfo(p.activityInfo.packageName, 0);
 
-                    //check if the application is not an application system
-//                    Intent launchIntent = app.getLaunchIntent(context);
-//                    if (launchIntent != null && (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0)
+                    AppInfo app = new AppInfo();
+                    app.setName(p.loadLabel(packageManager).toString());
+                    app.setPackageName(p.activityInfo.packageName);
+                    app.setIcon(p.loadIcon(packageManager));
+
+                    if(appInfo.packageName.matches(context.getPackageName())) {
+                        continue;
+                    }
                     installedApps.add(app);
+
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -297,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
 //                    }
 //                });
 //            }
+
             return installedApps;
         }
         return null;
@@ -321,6 +311,26 @@ public class MainActivity extends AppCompatActivity {
             dialog.dismiss();
         }
         super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == MyUtils.DRAW_REQUEST_CODE) {
+            if(!MyUtils.isDrawOverrideGranted(this)) {
+                MyUtils.checkDrawOverlayPermission(this);
+            } else {
+                /****************************** too much important don't miss it *****************************/
+                startService(new Intent(MainActivity.this, AppCheckServices.class));
+                MyUtils.checkAppPermissions(this);
+            }
+        } else if(requestCode == MyUtils.PHONE_REQUEST_CODE){
+            if(!MyUtils.isPhoneGranted(this)) {
+                MyUtils.checkPhonePermission(this);
+            } else {
+                MyUtils.checkAppPermissions(this);
+            }
+        }
     }
 
     public Dialog showRateDialog() {
