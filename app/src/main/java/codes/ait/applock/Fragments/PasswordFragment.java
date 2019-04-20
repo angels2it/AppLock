@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.takwolf.android.lock9.Lock9View;
 
+import codes.ait.applock.Custom.PasswordMatchedListener;
 import codes.ait.applock.R;
 import codes.ait.applock.AppLockConstants;
 import codes.ait.applock.Custom.FlatButton;
@@ -31,11 +32,18 @@ public class PasswordFragment extends Fragment {
     SharedPreference sharedPreference;
     FragmentManager fragmentManager;
     String fragment;
+    PasswordMatchedListener listener;
 
     public static PasswordFragment newInstance(FragmentManager fragmentManager, String fragment) {
         PasswordFragment f = new PasswordFragment();
         f.fragmentManager = fragmentManager;
         f.fragment = fragment;
+        return (f);
+    }
+
+    public static PasswordFragment newInstance(PasswordMatchedListener listener) {
+        PasswordFragment f = new PasswordFragment();
+        f.listener = listener;
         return (f);
     }
 
@@ -62,7 +70,10 @@ public class PasswordFragment extends Fragment {
             public void onClick(View v) {
                 if (inputPassword.getText().toString().matches(sharedPreference.getPassword(getContext()))) {
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
-
+                    if(listener != null) {
+                        listener.onMatched();
+                        return;
+                    }
                     if(AppLockConstants.FRAGMENT_LOCKED.matches(fragment)) {
                         Fragment f = AllAppFragment.newInstance(AppLockConstants.LOCKED);
                         fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
@@ -71,6 +82,10 @@ public class PasswordFragment extends Fragment {
                         Fragment f = AllAppFragment.newInstance(AppLockConstants.UNLOCKED);
                         fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
                         AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show Unlocked Applications Clicked", "show_unLocked_applications_clicked", "");
+                    } else if(AppLockConstants.FRAGMENT_ALL_APPS.matches(fragment)) {
+                        Fragment f = AllAppFragment.newInstance(AppLockConstants.ALL_APPS);
+                        fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                        AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show All Applications Clicked", "show_unLocked_applications_clicked", "");
                     }
                 } else {
                     Toast.makeText(getContext(), "Wrong Pattern Try Again", Toast.LENGTH_SHORT).show();

@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -38,6 +39,7 @@ import com.mikepenz.materialdrawer.util.KeyboardUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import codes.ait.applock.Custom.PasswordMatchedListener;
 import codes.ait.applock.Fragments.PasswordFragment;
 import codes.ait.applock.R;
 import codes.ait.applock.Custom.FlatButton;
@@ -60,17 +62,18 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     long numOfTimesAppOpened = 0;
-    boolean isRated = false;
+    FloatingActionButton fabLock;
+    public static boolean isLockMode = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        fabLock = findViewById(R.id.fabLock);
         context = getApplicationContext();
         sharedPreferences = getSharedPreferences(AppLockConstants.MyPREFERENCES, MODE_PRIVATE);
         editor = sharedPreferences.edit();
         numOfTimesAppOpened = sharedPreferences.getLong(AppLockConstants.NUM_OF_TIMES_APP_OPENED, 0) + 1;
-        isRated = sharedPreferences.getBoolean(AppLockConstants.IS_RATED, false);
         editor.putLong(AppLockConstants.NUM_OF_TIMES_APP_OPENED, numOfTimesAppOpened);
         editor.commit();
 
@@ -86,9 +89,8 @@ public class MainActivity extends AppCompatActivity {
         fragmentManager = getSupportFragmentManager();
 
         // Handle Toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         //Create the drawer
         result = new Drawer()
@@ -161,7 +163,31 @@ public class MainActivity extends AppCompatActivity {
 
 
         //react on the keyboard
-        result.keyboardSupportEnabled(this, true);
+//        result.keyboardSupportEnabled(this, true);
+        fabLock.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isLockMode) {
+                    Fragment fp = PasswordFragment.newInstance(new PasswordMatchedListener() {
+                        @Override
+                        public void onMatched() {
+                            isLockMode = false;
+                            fabLock.setImageResource(R.drawable.unlock);
+                            getSupportActionBar().setTitle("ALL APPS");
+                            Fragment f = AllAppFragment.newInstance(AppLockConstants.ALL_APPS);
+                            fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                        }
+                    });
+                    fragmentManager.beginTransaction().replace(R.id.fragment_container, fp).commit();
+                } else {
+                    isLockMode = true;
+                    fabLock.setImageResource(R.drawable.locked);
+                    getSupportActionBar().setTitle("Available Apps");
+                    Fragment f = AllAppFragment.newInstance(AppLockConstants.AVAILABLE);
+                    fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                }
+            }
+        });
     }
 
     @Override

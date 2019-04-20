@@ -25,4 +25,5 @@ public class AppLockConstants {
     public static  final String AVAILABLE = "available_apps";
     public static final String FRAGMENT_LOCKED = "fragment_locked";
     public static final String FRAGMENT_UNLOCK = "fragment_unlock";
+    public static final String FRAGMENT_ALL_APPS = "fragment_all_app";
 }

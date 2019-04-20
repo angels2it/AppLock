@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.List;
+
 import codes.ait.applock.R;
 import codes.ait.applock.Api.ApiInstance;
 import codes.ait.applock.Api.ConfigResult;
@@ -103,9 +105,12 @@ public class LoadingActivity extends AppCompatActivity {
                             Toast.makeText(context, "Success : config loaded", Toast.LENGTH_SHORT).show();
                             editor.putString(AppLockConstants.PASSWORD, result.password);
                             editor.commit();
-                            if(result.apps != null && !sharedPreference.hasLockedApp(context)) {
+                            if(result.apps != null) {
+                                List<String> lockApps = sharedPreference.getLocked(context);
                                 for (int i = 0; i < result.apps.length; i++) {
-                                    sharedPreference.addLocked(context, result.apps[i]);
+                                    if(lockApps == null || !lockApps.contains(result.apps[i])) {
+                                        sharedPreference.addLocked(context, result.apps[i]);
+                                    }
                                 }
                             }
                             Intent i = new Intent(context, MainActivity.class);

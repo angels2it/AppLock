@@ -46,7 +46,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
             applicationName = (TextView) v.findViewById(R.id.applicationName);
             cardView = (CardView) v.findViewById(R.id.card_view);
             icon = (ImageView) v.findViewById(R.id.icon);
-            if(requiredAppsType != AppLockConstants.AVAILABLE) {
+            if(!isShowOpenAppLayout()) {
                 switchView = (Switch) v.findViewById(R.id.switchView);
             }
         }
@@ -102,7 +102,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
     public ApplicationListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                                 int viewType) {
         // create a new view
-        if(this.requiredAppsType == AppLockConstants.AVAILABLE) {
+        if(isShowOpenAppLayout()) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.app_item, parent, false);
             // set the view's size, margins, paddings and layout parameters
             ViewHolder vh = new ViewHolder(v);
@@ -115,6 +115,10 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
             vh.switchView = (Switch) v.findViewById(R.id.switchView);
             return vh;
         }
+    }
+
+    private boolean isShowOpenAppLayout () {
+        return this.requiredAppsType == AppLockConstants.AVAILABLE || this.requiredAppsType == AppLockConstants.ALL_APPS;
     }
 
     // Replace the contents of a view (invoked by the layout manager)
@@ -153,7 +157,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(requiredAppsType != AppLockConstants.AVAILABLE) {
+                if(!isShowOpenAppLayout()) {
                     holder.switchView.performClick();
                 } else {
                     Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage(appInfo.getPackageName());

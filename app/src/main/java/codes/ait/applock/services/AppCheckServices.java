@@ -61,8 +61,6 @@ public class AppCheckServices extends Service {
     List<String> pakageName;
     List<String> installedApps = new ArrayList<String>();
     String myAppPackage = "";
-    boolean isShow = false;
-    ActivityManager mActivityManager;
     static List<String> bypassApps = new ArrayList<String>();
 
     @Override
@@ -79,7 +77,7 @@ public class AppCheckServices extends Service {
             pakageName = sharedPreference.getLocked(context);
         }
         timer = new Timer("AppCheckServices");
-        timer.schedule(updateTask, 1000L, 1000L);
+        timer.schedule(updateTask, 300L, 300L);
 
         final Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
         t.setScreenName(AppLockConstants.APP_LOCK);
@@ -119,7 +117,7 @@ public class AppCheckServices extends Service {
             if (sharedPreference != null) {
                 pakageName = sharedPreference.getLocked(context);
             }
-            if(isShow) {
+            if(!MainActivity.isLockMode || (dialog != null && dialog.isShowing())) {
                 return;
             }
             if (isConcernedAppIsInForeground() && !currentApp.matches(myAppPackage)) {
@@ -137,9 +135,7 @@ public class AppCheckServices extends Service {
                 if (imageView != null) {
                     imageView.post(new Runnable() {
                         public void run() {
-                            if(isShow) {
-                                hideUnlockDialog(false);
-                            }
+                            hideUnlockDialog(false);
                         }
                     });
                 }
@@ -148,19 +144,17 @@ public class AppCheckServices extends Service {
     };
 
     void showUnlockDialog() {
-        isShow = true;
         showDialog();
     }
 
     void hideUnlockDialog(boolean isPasswordConfirmed) {
-        isShow = false;
-        Log.d(TAG,"Hide dialog");
         if(!isPasswordConfirmed) {
             previousApp = "";
         }
         try {
             if (dialog != null) {
                 if (dialog.isShowing()) {
+                    Log.d(TAG,"Hide dialog");
                     dialog.dismiss();
                 }
             }
