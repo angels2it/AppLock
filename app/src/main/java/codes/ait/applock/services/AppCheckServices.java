@@ -63,6 +63,7 @@ public class AppCheckServices extends Service {
     String myAppPackage = "";
     boolean isShow = false;
     ActivityManager mActivityManager;
+    static List<String> bypassApps = new ArrayList<String>();
 
     @Override
     public void onCreate() {
@@ -180,6 +181,9 @@ public class AppCheckServices extends Service {
             @Override
             public void onClick(View v) {
                 if (inputPassword.getText().toString().matches(sharedPreference.getPassword(context))) {
+                    if(!bypassApps.contains(currentApp)) {
+                        bypassApps.add(currentApp);
+                    }
                     hideUnlockDialog(true);
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
                 } else {
