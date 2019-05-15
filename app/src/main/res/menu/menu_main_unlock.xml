@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
     <item
-        android:id="@+id/action_lock"
+        android:id="@+id/action_unlock"
         android:orderInCategory="100"
-        android:title="Lock All"
+        android:title="Unlock All"
         app:showAsAction="always" />
 </menu>

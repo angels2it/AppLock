@@ -1,6 +1,7 @@
 package codes.ait.applock.Utils;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AppOpsManager;
@@ -15,9 +16,14 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
+import android.telephony.TelephonyManager;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.util.Arrays;
 import java.util.List;
+
+import codes.ait.applock.Data.AppConfig;
 
 /**
  * Created by amitshekhar on 22/05/15.
@@ -28,6 +34,8 @@ public class MyUtils {
     public static int PHONE_REQUEST_CODE = 5464 & 0xffffff00;
     public static int APP_USAGE_REQUEST_CODE = 5465 & 0xffffff00;
     public static int currentPermission = 0;
+
+    public static AppConfig Config = new AppConfig();
     /**
      * Checks if user has internet connectivity
      *
@@ -138,5 +146,15 @@ public class MyUtils {
     public static void checkUsagePermission(Activity context) {
         final Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
         context.startActivityForResult(intent, APP_USAGE_REQUEST_CODE);
+    }
+
+    @SuppressLint("MissingPermission")
+    public static String getImei (Activity context) {
+        if(isPhoneGranted(context)) {
+            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            return telephonyManager.getDeviceId();
+        } else {
+            return "";
+        }
     }
 }

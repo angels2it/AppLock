@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "293652675192",
+    "firebase_url": "https://app-lock-31c39.firebaseio.com",
+    "project_id": "app-lock-31c39",
+    "storage_bucket": "app-lock-31c39.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293652675192:android:faf5389763a27b41",
+        "android_client_info": {
+          "package_name": "codes.ait.applock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "293652675192-05kddjna9u9f478d1ifk093lg2kerp59.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiPwLkxku4jW776GfsapYTJnF8GGFl_Bk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "293652675192-05kddjna9u9f478d1ifk093lg2kerp59.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

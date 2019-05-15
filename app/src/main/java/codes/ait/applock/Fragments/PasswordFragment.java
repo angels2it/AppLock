@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.takwolf.android.lock9.Lock9View;
 
 import codes.ait.applock.Custom.PasswordMatchedListener;
@@ -62,7 +63,7 @@ public class PasswordFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.fragment_password, container, false);
-
+        FirebaseAnalytics.getInstance(getContext()).setCurrentScreen(this.getActivity(), this.getClass().getSimpleName(), this.getClass().getSimpleName());
         final EditText inputPassword = (EditText) v.findViewById(R.id.input_password);
         Button confirmPassword = (Button) v.findViewById(R.id.confirm_password);
         confirmPassword.setOnClickListener(new View.OnClickListener() {
@@ -88,7 +89,7 @@ public class PasswordFragment extends Fragment {
                         AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show All Applications Clicked", "show_unLocked_applications_clicked", "");
                     }
                 } else {
-                    Toast.makeText(getContext(), "Wrong Pattern Try Again", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Password does not match, Try Again", Toast.LENGTH_SHORT).show();
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Wrong Password", "wrong_password", "");
                 }
             }

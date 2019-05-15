@@ -63,12 +63,36 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
 //        notifyItemRemoved(position);
     }
 
+    public void lockAll () {
+        for (int i = 0; i < installedApps.size(); i++) {
+            String packageName = installedApps.get(i).getPackageName();
+            if (!checkLockedItem(packageName)) {
+                sharedPreference.addLocked(context, packageName);
+            }
+        }
+        initData();
+    }
+
+    public void  unlockAll() {
+        for (int i = 0; i < installedApps.size(); i++) {
+            String packageName = installedApps.get(i).getPackageName();
+            if (checkLockedItem(packageName)) {
+                sharedPreference.removeLocked(context, packageName);
+            }
+        }
+        initData();
+    }
+
     // Provide a suitable constructor (depends on the kind of dataset)
     public ApplicationListAdapter(List<AppInfo> appInfoList, Context context, String requiredAppsType) {
         installedApps = appInfoList;
         this.context = context;
         this.requiredAppsType = requiredAppsType;
         sharedPreference = new SharedPreference();
+        initData();
+    }
+
+    private void  initData () {
         List<AppInfo> lockedFilteredAppList = new ArrayList<AppInfo>();
         List<AppInfo> unlockedFilteredAppList = new ArrayList<AppInfo>();
         boolean flag = true;
@@ -95,6 +119,7 @@ public class ApplicationListAdapter extends RecyclerView.Adapter<ApplicationList
                 installedApps.addAll(unlockedFilteredAppList);
             }
         }
+        notifyDataSetChanged();
     }
 
     // Create new views (invoked by the layout manager)

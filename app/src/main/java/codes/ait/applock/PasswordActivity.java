@@ -9,9 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.takwolf.android.lock9.Lock9View;
 
 import codes.ait.applock.R;
@@ -32,10 +29,6 @@ public class PasswordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_password);
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.PASSWORD_CHECK_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
 
         forgetPassword = (FlatButton) findViewById(R.id.forgetPassword);
         lock9View = (Lock9View) findViewById(R.id.lock_9_view);
@@ -73,14 +66,11 @@ public class PasswordActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
-        super.onStop();
         super.onStop();
     }
 }

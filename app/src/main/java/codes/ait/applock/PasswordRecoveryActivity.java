@@ -9,13 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +29,7 @@ public class PasswordRecoveryActivity extends AppCompatActivity {
     Context context;
     Spinner questionsSpinner;
     EditText answer;
-    FlatButton confirmButton;
+    Button confirmButton;
     int questionNumber = 0;
 
     @Override
@@ -40,12 +37,8 @@ public class PasswordRecoveryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_recovery_password);
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.PASSWORD_RECOVERY_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
 
-        confirmButton = (FlatButton) findViewById(R.id.confirmButton);
+        confirmButton = (Button) findViewById(R.id.confirmButton);
         questionsSpinner = (Spinner) findViewById(R.id.questionsSpinner);
         answer = (EditText) findViewById(R.id.answer);
 
@@ -116,14 +109,11 @@ public class PasswordRecoveryActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
-        super.onStop();
         super.onStop();
     }
 

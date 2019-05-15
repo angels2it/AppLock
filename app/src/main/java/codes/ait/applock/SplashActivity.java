@@ -14,10 +14,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-
 import codes.ait.applock.R;
 import codes.ait.applock.Api.ApiInstance;
 import codes.ait.applock.Utils.MyUtils;
@@ -86,17 +82,10 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(linearLayout);
         Intent i = new Intent(SplashActivity.this, LoadingActivity.class);
         startActivity(i);
-
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.SPLASH_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
-
     }
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
@@ -107,7 +96,6 @@ public class SplashActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
         super.onStop();
         super.onStop();
     }

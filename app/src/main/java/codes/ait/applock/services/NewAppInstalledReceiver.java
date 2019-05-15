@@ -67,7 +67,7 @@ public class NewAppInstalledReceiver extends BroadcastReceiver {
 // Add the buttons
 
         builder.setTitle("App Lock")
-                .setIcon(context.getResources().getDrawable(R.mipmap.ic_launcher))
+                .setIcon(context.getResources().getDrawable(R.drawable.ic_launcher))
                 .setMessage("Do you want to lock " + appName + "?")
                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {

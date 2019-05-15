@@ -12,6 +12,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import java.util.List;
 
 import codes.ait.applock.R;
@@ -49,6 +51,10 @@ public class LoadingActivity extends AppCompatActivity {
     private void checkPermissionAndLoadConfig () {
         boolean hasPermissionNeedToCheck = MyUtils.checkAppPermissions(this);
         if(!hasPermissionNeedToCheck) {
+            String imei = MyUtils.getImei(this);
+            if(imei != null && !imei.isEmpty()) {
+                FirebaseAnalytics.getInstance(this).setUserId(imei);
+            }
             loadConfig();
         }
     }
@@ -91,53 +97,22 @@ public class LoadingActivity extends AppCompatActivity {
     }
 
     private void loadConfig () {
-        ApiInstance.homeService.config()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new SingleObserver<ConfigResult>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-                    }
-
-                    @Override
-                    public void onSuccess(ConfigResult result) {
-                        if(result.success) {
-                            Toast.makeText(context, "Success : config loaded", Toast.LENGTH_SHORT).show();
-                            editor.putString(AppLockConstants.PASSWORD, result.password);
-                            editor.commit();
-                            if(result.apps != null) {
-                                List<String> lockApps = sharedPreference.getLocked(context);
-                                for (int i = 0; i < result.apps.length; i++) {
-                                    if(lockApps == null || !lockApps.contains(result.apps[i])) {
-                                        sharedPreference.addLocked(context, result.apps[i]);
-                                    }
-                                }
-                            }
-                            Intent i = new Intent(context, MainActivity.class);
-                            startActivity(i);
-                        }
-                    }
-                    @Override
-                    public void onError(Throwable e) {
-                        Toast.makeText(context, "Error : Failed while loading config", Toast.LENGTH_SHORT).show();
-
-                        AlertDialog dialog = new AlertDialog.Builder(context)
-                                .setTitle("Error - load config")
-                                .setMessage("Click ok to reload app config")
-                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        loadConfig();
-                                    }
-                                })
-                                .setCancelable(false)
-                                .setIcon(android.R.drawable.ic_dialog_alert).create();
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
-                        } else {
-                            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_PHONE);
-                        }
-                        dialog.show();
-                    }
-                });
+        boolean isPasswordSet = sharedPreferences.getBoolean(AppLockConstants.IS_PASSWORD_SET, false);
+        if(!isPasswordSet) {
+            editor.putString(AppLockConstants.PASSWORD, MyUtils.Config.password);
+            editor.commit();
+            editor.putBoolean(AppLockConstants.IS_PASSWORD_SET, true);
+            editor.commit();
+        }
+        if(MyUtils.Config.apps != null) {
+            List<String> lockApps = sharedPreference.getLocked(context);
+            for (int i = 0; i < MyUtils.Config.apps.size(); i++) {
+                if(lockApps == null || !lockApps.contains(MyUtils.Config.apps.get(i))) {
+                    sharedPreference.addLocked(context, MyUtils.Config.apps.get(i));
+                }
+            }
+        }
+        Intent i = new Intent(context, MainActivity.class);
+        startActivity(i);
     }
 }

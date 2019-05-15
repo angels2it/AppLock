@@ -2,9 +2,6 @@ package codes.ait.applock;
 
 import android.app.Application;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.Tracker;
-
 import java.util.HashMap;
 
 import codes.ait.applock.R;
@@ -14,9 +11,8 @@ import codes.ait.applock.R;
  */
 public class AppLockApplication extends Application {
 
-    public static final String PROPERTY_ID = "UA-62504955-1";
+    public static final String PROPERTY_ID = "UA-118046125-3";
     private static AppLockApplication appInstance;
-    HashMap<TrackerName, Tracker> mTrackers = new HashMap<TrackerName, Tracker>();
 
     @Override
     public void onCreate() {
@@ -37,18 +33,5 @@ public class AppLockApplication extends Application {
      */
     public static synchronized AppLockApplication getInstance() {
         return appInstance;
-    }
-
-    public synchronized Tracker getTracker(TrackerName trackerId) {
-        if (!mTrackers.containsKey(trackerId)) {
-
-            GoogleAnalytics analytics = GoogleAnalytics.getInstance(this);
-            Tracker t = (trackerId == TrackerName.APP_TRACKER) ? analytics
-                    .newTracker(PROPERTY_ID) : analytics
-                    .newTracker(R.xml.global_tracker);
-            mTrackers.put(trackerId, t);
-
-        }
-        return mTrackers.get(trackerId);
     }
 }

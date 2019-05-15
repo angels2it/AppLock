@@ -6,6 +6,7 @@ package codes.ait.applock;
 public class AppLockConstants {
     public static final String MyPREFERENCES = "MyPreferences";
     public static final String IS_PASSWORD_SET = "is_password_set";
+    public static final String IS_RECOVER_SET = "is_recover_set";
     public static final String IS_RATED = "is_rated";
     public static final String NUM_OF_TIMES_APP_OPENED = "num_of_times_app_opened";
     public static final String PASSWORD = "password";

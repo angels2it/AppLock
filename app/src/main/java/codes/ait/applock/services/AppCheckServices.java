@@ -24,9 +24,6 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -78,10 +75,6 @@ public class AppCheckServices extends Service {
         }
         timer = new Timer("AppCheckServices");
         timer.schedule(updateTask, 300L, 300L);
-
-        final Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.APP_LOCK);
-        t.send(new HitBuilders.AppViewBuilder().build());
 
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         imageView = new ImageView(this);
@@ -181,7 +174,7 @@ public class AppCheckServices extends Service {
                     hideUnlockDialog(true);
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Correct Password", "correct_password", "");
                 } else {
-                    Toast.makeText(getApplicationContext(), "Wrong Pattern Try Again", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Password does not match, Try Again", Toast.LENGTH_SHORT).show();
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Wrong Password", "wrong_password", "");
                 }
             }
@@ -199,6 +192,7 @@ public class AppCheckServices extends Service {
         dialog.getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
         dialog.setContentView(promptsView);
         dialog.getWindow().setGravity(Gravity.CENTER);
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 
         dialog.setOnKeyListener(new Dialog.OnKeyListener() {
             @Override
@@ -213,7 +207,7 @@ public class AppCheckServices extends Service {
                     startActivity(startMain);
                     hideUnlockDialog(false);
                 }
-                return true;
+                return false;
             }
         });
 

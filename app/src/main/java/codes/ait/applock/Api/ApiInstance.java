@@ -10,7 +10,7 @@ public class ApiInstance {
     public static HomeService homeService;
     public  static  void  Init() {
         retrofit = new Retrofit.Builder()
-                .baseUrl("http://angels2it.ddns.net:3001/v1/")
+                .baseUrl("http://api.applock.ezs.network/v1/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();

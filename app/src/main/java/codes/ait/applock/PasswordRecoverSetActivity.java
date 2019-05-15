@@ -9,13 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +29,7 @@ public class PasswordRecoverSetActivity extends AppCompatActivity {
     Context context;
     Spinner questionsSpinner;
     EditText answer;
-    FlatButton confirmButton;
+    Button confirmButton;
     int questionNumber = 0;
 
     @Override
@@ -40,12 +37,8 @@ public class PasswordRecoverSetActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_recover_set_password);
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.PASSWORD_RECOVER_SET_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
 
-        confirmButton = (FlatButton) findViewById(R.id.confirmButton);
+        confirmButton = (Button) findViewById(R.id.confirmButton);
         questionsSpinner = (Spinner) findViewById(R.id.questionsSpinner);
         answer = (EditText) findViewById(R.id.answer);
 
@@ -82,15 +75,13 @@ public class PasswordRecoverSetActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (questionNumber != 0 && !answer.getText().toString().isEmpty()) {
-                    editor.putBoolean(AppLockConstants.IS_PASSWORD_SET, true);
+                    editor.putBoolean(AppLockConstants.IS_RECOVER_SET,true);
                     editor.commit();
                     editor.putString(AppLockConstants.ANSWER, answer.getText().toString());
                     editor.commit();
                     editor.putInt(AppLockConstants.QUESTION_NUMBER, questionNumber);
                     editor.commit();
 
-                    Intent i = new Intent(PasswordRecoverSetActivity.this, LoadingActivity.class);
-                    startActivity(i);
                     finish();
                 } else {
                     Toast.makeText(getApplicationContext(), "Please select a question and write an answer", Toast.LENGTH_SHORT).show();
@@ -104,9 +95,6 @@ public class PasswordRecoverSetActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent i = new Intent(PasswordRecoverSetActivity.this, PasswordSetActivity.class);
-        startActivity(i);
-        finish();
     }
 
 
@@ -117,13 +105,11 @@ public class PasswordRecoverSetActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
         super.onStop();
         super.onStop();
     }

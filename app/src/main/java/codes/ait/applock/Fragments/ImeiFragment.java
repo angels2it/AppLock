@@ -16,13 +16,14 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.firebase.analytics.FirebaseAnalytics;
+
 import codes.ait.applock.R;
 import codes.ait.applock.Api.ApiInstance;
 import codes.ait.applock.Api.ApiResult;
 import codes.ait.applock.Api.Imei;
 import codes.ait.applock.AppLockConstants;
 import codes.ait.applock.Custom.FlatButton;
-import codes.ait.applock.MainActivity;
 import codes.ait.applock.Utils.AppLockLogEvents;
 import io.reactivex.SingleObserver;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -57,10 +58,11 @@ public class ImeiFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View v = inflater.inflate(R.layout.activity_set_imei, container, false);
+        FirebaseAnalytics.getInstance(getContext()).setCurrentScreen(this.getActivity(), this.getClass().getSimpleName(), this.getClass().getSimpleName());
 
         imeiInput = (EditText) v.findViewById(R.id.editText);
         confirmButton = (FlatButton) v.findViewById(R.id.confirmButton);
-        retryButton = (FlatButton) v.findViewById(R.id.retryButton);
+        retryButton = (FlatButton) v.findViewById(R.id.forgotButton);
         confirmButton.setEnabled(false);
         sharedPreferences = getActivity().getSharedPreferences(AppLockConstants.MyPREFERENCES, Context.MODE_PRIVATE);
 
@@ -121,6 +123,9 @@ public class ImeiFragment extends Fragment {
         } else {
             TelephonyManager telephonyManager = (TelephonyManager) getContext().getSystemService(Context.TELEPHONY_SERVICE);
             imei = telephonyManager.getDeviceId();
+            if(imei != null && !imei.isEmpty()) {
+                FirebaseAnalytics.getInstance(getContext()).setUserProperty("imei", imei);
+            }
             imeiInput.setText((imei));
             confirmButton.setEnabled(true);
         }

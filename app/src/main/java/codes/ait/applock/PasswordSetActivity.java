@@ -7,15 +7,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
-import com.takwolf.android.lock9.Lock9View;
-
-import codes.ait.applock.R;
 import codes.ait.applock.Custom.FlatButton;
 import codes.ait.applock.Utils.AppLockLogEvents;
 
@@ -23,14 +19,14 @@ import codes.ait.applock.Utils.AppLockLogEvents;
  * Created by amitshekhar on 30/04/15.
  */
 public class PasswordSetActivity extends AppCompatActivity {
-    Lock9View lock9View;
-    FlatButton confirmButton, retryButton;
-    TextView textView;
-    boolean isEnteringFirstTime = true;
-    boolean isEnteringSecondTime = false;
+    Button confirmButton, forgotButton;
+    EditText password;
+    EditText newPassword;
     String enteredPassword;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
+    String currentPassword;
+    Boolean isPasswordSet;
     Context context;
 
     @Override
@@ -38,65 +34,57 @@ public class PasswordSetActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
         setContentView(R.layout.activity_password_set);
-        lock9View = (Lock9View) findViewById(R.id.lock_9_view);
-        confirmButton = (FlatButton) findViewById(R.id.confirmButton);
-        retryButton = (FlatButton) findViewById(R.id.retryButton);
-        textView = (TextView) findViewById(R.id.textView);
-        confirmButton.setEnabled(false);
-        retryButton.setEnabled(false);
+        confirmButton = (Button) findViewById(R.id.confirmButton);
+        forgotButton= (Button) findViewById(R.id.forgotButton);
+        password = (EditText) findViewById(R.id.password);
+        newPassword = (EditText) findViewById(R.id.new_password);
         sharedPreferences = getSharedPreferences(AppLockConstants.MyPREFERENCES, MODE_PRIVATE);
+        currentPassword = sharedPreferences.getString(AppLockConstants.PASSWORD, "");
+        isPasswordSet = sharedPreferences.getBoolean(AppLockConstants.IS_PASSWORD_SET, false);
         editor = sharedPreferences.edit();
 
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.FIRST_TIME_PASSWORD_SET_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
+        if(!isPasswordSet) {
+            password.setVisibility(View.GONE);
+            forgotButton.setVisibility(View.GONE);
+        } else {
+            password.setVisibility(View.VISIBLE);
+            forgotButton.setVisibility(View.VISIBLE);
+        }
 
         confirmButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                editor.putString(AppLockConstants.PASSWORD, enteredPassword);
-                editor.commit();
+                if(isPasswordSet) {
+                    String newPass = newPassword.getText().toString();
+                    if(newPass == null || newPass.length() == 0) {
+                        Toast.makeText(getApplicationContext(), "Please input new password", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (password.getText().toString().matches(currentPassword)) {
+                        editor.putString(AppLockConstants.PASSWORD, newPass);
+                        editor.commit();
+                        Toast.makeText(getApplicationContext(), "Password changed successfully", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Password does not match - Try again", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    editor.putBoolean(AppLockConstants.IS_PASSWORD_SET, true);
+                    editor.commit();
+                    editor.putString(AppLockConstants.PASSWORD, newPassword.getText().toString());
+                    editor.commit();
 
-
-                Intent i = new Intent(PasswordSetActivity.this, PasswordRecoverSetActivity.class);
-                startActivity(i);
-                finish();
-                AppLockLogEvents.logEvents(AppLockConstants.FIRST_TIME_PASSWORD_SET_SCREEN, "Confirm Password", "confirm_password", "");
+                    Intent i = new Intent(PasswordSetActivity.this, MainActivity.class);
+                    i.setFlags(i.FLAG_ACTIVITY_NEW_TASK | i.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(i);
+                    finish();
+                }
             }
         });
-        retryButton.setOnClickListener(new View.OnClickListener() {
+        forgotButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                isEnteringFirstTime = true;
-                isEnteringSecondTime = false;
-                textView.setText("Draw Pattern");
-                confirmButton.setEnabled(false);
-                retryButton.setEnabled(false);
-                AppLockLogEvents.logEvents(AppLockConstants.FIRST_TIME_PASSWORD_SET_SCREEN, "Retry Password", "retry_password", "");
-            }
-        });
-
-        lock9View.setCallBack(new Lock9View.CallBack() {
-            @Override
-            public void onFinish(String password) {
-                retryButton.setEnabled(true);
-                if (isEnteringFirstTime) {
-                    enteredPassword = password;
-                    isEnteringFirstTime = false;
-                    isEnteringSecondTime = true;
-                    textView.setText("Re-Draw Pattern");
-                } else if (isEnteringSecondTime) {
-                    if (enteredPassword.matches(password)) {
-                        confirmButton.setEnabled(true);
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Both Pattern did not match - Try again", Toast.LENGTH_SHORT).show();
-                        isEnteringFirstTime = true;
-                        isEnteringSecondTime = false;
-                        textView.setText("Draw Pattern");
-                        retryButton.setEnabled(false);
-                    }
-                }
+                startActivity(new Intent(context, PasswordRecoveryActivity.class));
             }
         });
     }
@@ -108,14 +96,11 @@ public class PasswordSetActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
-        super.onStop();
         super.onStop();
     }
 }

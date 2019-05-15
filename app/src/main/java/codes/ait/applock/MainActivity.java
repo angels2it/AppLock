@@ -7,9 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -18,17 +15,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.RatingBar;
 import android.widget.Toast;
 
-import com.google.android.gms.analytics.GoogleAnalytics;
-import com.google.android.gms.analytics.HitBuilders;
-import com.google.android.gms.analytics.Tracker;
 import com.mikepenz.iconics.typeface.FontAwesome;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
@@ -41,15 +33,11 @@ import java.util.List;
 
 import codes.ait.applock.Custom.PasswordMatchedListener;
 import codes.ait.applock.Fragments.PasswordFragment;
-import codes.ait.applock.R;
-import codes.ait.applock.Custom.FlatButton;
 import codes.ait.applock.Data.AppInfo;
 import codes.ait.applock.Fragments.AllAppFragment;
 import codes.ait.applock.Fragments.AvailableAppFragment;
 import codes.ait.applock.Fragments.ImeiFragment;
 import codes.ait.applock.Utils.AppLockLogEvents;
-import codes.ait.applock.Utils.MyUtils;
-import codes.ait.applock.services.AppCheckServices;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -77,11 +65,6 @@ public class MainActivity extends AppCompatActivity {
         editor.putLong(AppLockConstants.NUM_OF_TIMES_APP_OPENED, numOfTimesAppOpened);
         editor.commit();
 
-        //Google Analytics
-        Tracker t = ((AppLockApplication) getApplication()).getTracker(AppLockApplication.TrackerName.APP_TRACKER);
-        t.setScreenName(AppLockConstants.MAIN_SCREEN);
-        t.send(new HitBuilders.AppViewBuilder().build());
-
         if (Build.VERSION.SDK_INT > 20){
             Toast.makeText(getApplicationContext(), "If you have not allowed , allow App Lock so that it can work properly from sliding menu options", Toast.LENGTH_LONG).show();
         }
@@ -91,17 +74,12 @@ public class MainActivity extends AppCompatActivity {
         // Handle Toolbar
         final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         //Create the drawer
         result = new Drawer()
                 .withActivity(this)
                 .withToolbar(toolbar)
                 .addDrawerItems(
-                        new PrimaryDrawerItem().withName("All Applications").withIcon(FontAwesome.Icon.faw_home),
-                        new PrimaryDrawerItem().withName("Locked Applications").withIcon(FontAwesome.Icon.faw_lock),
-                        new PrimaryDrawerItem().withName("Unlocked Applications").withIcon(FontAwesome.Icon.faw_unlock),
-                        new PrimaryDrawerItem().withName("Allow Access").withIcon(FontAwesome.Icon.faw_share),
-                        new PrimaryDrawerItem().withName("Add IMEI").withIcon(FontAwesome.Icon.faw_share)
+                        new PrimaryDrawerItem().withName("Available Applications").withIcon(FontAwesome.Icon.faw_home)
                 ) // add the items we want to use with our Drawer
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
@@ -110,19 +88,19 @@ public class MainActivity extends AppCompatActivity {
 
                             if (position == 0) {
                                 getSupportActionBar().setTitle("Available Apps");
-                                Fragment f = AllAppFragment.newInstance(AppLockConstants.AVAILABLE);
+                                Fragment f = AvailableAppFragment.newInstance(false);
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
                                 AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Show Unlocked Applications Clicked", "show_unlocked_applications_clicked", "");
                             }
 
                             if (position == 1) {
-                                Fragment fp = PasswordFragment.newInstance(fragmentManager, AppLockConstants.FRAGMENT_LOCKED);
+                                Fragment fp = AllAppFragment.newInstance(AppLockConstants.LOCKED);
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, fp).commit();
                                 getSupportActionBar().setTitle("Locked Applications");
                             }
 
                             if (position == 2) {
-                                Fragment fp = PasswordFragment.newInstance(fragmentManager, AppLockConstants.FRAGMENT_UNLOCK);
+                                Fragment fp = AllAppFragment.newInstance(AppLockConstants.UNLOCKED);
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, fp).commit();
                                 getSupportActionBar().setTitle("Unlocked Applications");
                             }
@@ -140,6 +118,10 @@ public class MainActivity extends AppCompatActivity {
                                 Fragment f = ImeiFragment.newInstance();
                                 fragmentManager.beginTransaction().replace(R.id.fragment_container, f, "IMEI").addToBackStack("IMEI").commit();
                                 AppLockLogEvents.logEvents(AppLockConstants.MAIN_SCREEN, "Set IMEI Clicked", "set_imei_clicked", "");
+                            }
+
+                            if (position == 5) {
+                                startActivity(new Intent(context, PasswordSetActivity.class));
                             }
                         }
                     }
@@ -173,9 +155,10 @@ public class MainActivity extends AppCompatActivity {
                         public void onMatched() {
                             isLockMode = false;
                             fabLock.setImageResource(R.drawable.unlock);
-                            getSupportActionBar().setTitle("ALL APPS");
-                            Fragment f = AllAppFragment.newInstance(AppLockConstants.ALL_APPS);
+                            getSupportActionBar().setTitle("All Apps");
+                            Fragment f = AvailableAppFragment.newInstance(true);
                             fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                            tooglePasswordDrawable(true);
                         }
                     });
                     fragmentManager.beginTransaction().replace(R.id.fragment_container, fp).commit();
@@ -183,11 +166,35 @@ public class MainActivity extends AppCompatActivity {
                     isLockMode = true;
                     fabLock.setImageResource(R.drawable.locked);
                     getSupportActionBar().setTitle("Available Apps");
-                    Fragment f = AllAppFragment.newInstance(AppLockConstants.AVAILABLE);
+                    Fragment f = AvailableAppFragment.newInstance(false);
                     fragmentManager.beginTransaction().replace(R.id.fragment_container, f).commit();
+                    tooglePasswordDrawable(false);
                 }
             }
         });
+        if(!sharedPreferences.getBoolean(AppLockConstants.IS_RECOVER_SET, false)) {
+            startActivity(new Intent(context, PasswordRecoverSetActivity.class));
+        }
+    }
+
+    private void tooglePasswordDrawable (boolean enable) {
+        result.removeAllItems();
+        if(enable) {
+            getSupportActionBar().show();
+            result.addItems(
+                    new PrimaryDrawerItem().withName("All Applications").withIcon(FontAwesome.Icon.faw_home),
+                    new PrimaryDrawerItem().withName("Locked Applications").withIcon(FontAwesome.Icon.faw_lock),
+                    new PrimaryDrawerItem().withName("Unlocked Applications").withIcon(FontAwesome.Icon.faw_unlock),
+                    new PrimaryDrawerItem().withName("Allow Access").withIcon(FontAwesome.Icon.faw_share),
+                    new PrimaryDrawerItem().withName("Add IMEI").withIcon(FontAwesome.Icon.faw_share),
+                    new PrimaryDrawerItem().withName("Change Password").withIcon(FontAwesome.Icon.faw_lock)
+            );
+        } else {
+            getSupportActionBar().hide();
+            result.addItems(
+                    new PrimaryDrawerItem().withName("Available Applications").withIcon(FontAwesome.Icon.faw_home)
+            );
+        }
     }
 
     @Override
@@ -231,12 +238,7 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
+//
 //
 //    @Override
 //    public boolean onOptionsItemSelected(MenuItem item) {
@@ -246,9 +248,7 @@ public class MainActivity extends AppCompatActivity {
 //        int id = item.getItemId();
 //
 //        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            Intent i = new Intent(MainActivity.this, SettingsActivity.class);
-//            startActivity(i);
+//        if (id == R.id.action_lock) {
 //            return true;
 //        }
 //
@@ -299,13 +299,11 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleAnalytics.getInstance(context).reportActivityStart(this);
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        GoogleAnalytics.getInstance(context).reportActivityStop(this);
         super.onStop();
         super.onStop();
     }

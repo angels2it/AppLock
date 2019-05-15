@@ -47,7 +47,7 @@
             android:layout_height="match_parent"></View>
 
         <codes.ait.applock.Custom.FlatButton
-            android:id="@+id/retryButton"
+            android:id="@+id/forgotButton"
             android:layout_width="150dp"
             android:layout_height="48dp"
             android:text="CANCEL"
