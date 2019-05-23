@@ -19,6 +19,7 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.takwolf.android.lock9.Lock9View;
 
 import codes.ait.applock.Custom.PasswordMatchedListener;
+import codes.ait.applock.PasswordRecoveryActivity;
 import codes.ait.applock.R;
 import codes.ait.applock.AppLockConstants;
 import codes.ait.applock.Custom.FlatButton;
@@ -92,6 +93,14 @@ public class PasswordFragment extends Fragment {
                     Toast.makeText(getContext(), "Password does not match, Try Again", Toast.LENGTH_SHORT).show();
                     AppLockLogEvents.logEvents(AppLockConstants.PASSWORD_CHECK_SCREEN, "Wrong Password", "wrong_password", "");
                 }
+            }
+        });
+
+        TextView forgotPassword = v.findViewById(R.id.forgotText);
+        forgotPassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getContext(), PasswordRecoveryActivity.class));
             }
         });
 

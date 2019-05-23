@@ -4,6 +4,7 @@
     tools:context=".MainActivity">
     <item
         android:id="@+id/action_lock"
+        android:icon="@drawable/locked"
         android:orderInCategory="100"
         android:title="Lock All"
         app:showAsAction="always" />

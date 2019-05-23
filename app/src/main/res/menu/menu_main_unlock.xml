@@ -4,6 +4,7 @@
     tools:context=".MainActivity">
     <item
         android:id="@+id/action_unlock"
+        android:icon="@drawable/unlock"
         android:orderInCategory="100"
         android:title="Unlock All"
         app:showAsAction="always" />
